@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #e8ecf2;
+  --card-bg: #ffffff;
+  --primary: #1e78db;
+  --text: #0d2c8b;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  @apply bg-bg text-text font-poppins;
+}
