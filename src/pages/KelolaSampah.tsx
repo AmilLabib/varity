@@ -64,20 +64,20 @@ function KelolaSampah() {
       {
         name: "Organik",
         value: wasteHistory.find((w) => w.type === "Organik")?.kg ?? 0,
-        color: "#10b981",
+        color: "#486071",
       },
       {
         name: "Plastik",
         value: wasteHistory.find((w) => w.type === "Plastik")?.kg ?? 0,
-        color: "#3b82f6",
+        color: "#778d9b",
       },
       {
         name: "Kertas",
         value: wasteHistory.find((w) => w.type === "Kertas")?.kg ?? 0,
-        color: "#f59e0b",
+        color: "#9cb2c1",
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -122,7 +122,7 @@ function KelolaSampah() {
           <section className="lg:col-span-7 bg-white rounded-2xl p-6 shadow-md">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <BarChart className="w-5 h-5 text-blue-600" />
+                <BarChart className="w-5 h-5 text-primary" />
                 <h2 className="text-xl font-semibold">
                   Eco-Dashboard (Impact Tracker)
                 </h2>
@@ -174,7 +174,7 @@ function KelolaSampah() {
 
             {/* Thank You Card */}
             <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4 flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-blue-600" />
+              <CheckCircle className="w-5 h-5 text-primary" />
               <p className="text-sm text-green-700">
                 Terima kasih telah berkontribusi menjaga bumi! Limbah Anda
                 sedang diproses menjadi energi terbarukan.
@@ -185,7 +185,7 @@ function KelolaSampah() {
           {/* Pickup Request Form */}
           <section className="lg:col-span-5 bg-white rounded-2xl p-6 shadow-md">
             <div className="flex items-center gap-2 mb-3">
-              <Truck className="w-5 h-5 text-blue-600" />
+              <Truck className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-semibold">Pickup Request</h2>
             </div>
 
@@ -236,7 +236,7 @@ function KelolaSampah() {
                     if (!form.kg) return alert("Mohon isi estimasi berat.");
                     setModalTitle("Permintaan Pickup Terkirim");
                     setModalMessage(
-                      "Permintaan terkirim ke Dinas Lingkungan Hidup Tangsel. Estimasi jemput: Besok."
+                      "Permintaan terkirim ke Dinas Lingkungan Hidup Tangsel. Estimasi jemput: Besok.",
                     );
                     setModalOpen(true);
                   }}
@@ -253,7 +253,7 @@ function KelolaSampah() {
           {/* Rewards Marketplace */}
           <section className="lg:col-span-12 bg-white rounded-2xl p-6 shadow-md">
             <div className="flex items-center gap-2 mb-3">
-              <Gift className="w-5 h-5 text-blue-600" />
+              <Gift className="w-5 h-5 text-primary" />
               <h2 className="text-xl font-semibold">Rewards Marketplace</h2>
             </div>
 
@@ -286,7 +286,7 @@ function KelolaSampah() {
                         if (!canRedeem(item.cost)) return;
                         setModalTitle("Redeem Berhasil");
                         setModalMessage(
-                          "Redeemed! Poin akan dipotong dan benefit diaktifkan."
+                          "Redeemed! Poin akan dipotong dan benefit diaktifkan.",
                         );
                         setModalOpen(true);
                       }}

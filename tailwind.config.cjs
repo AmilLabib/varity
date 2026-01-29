@@ -7,9 +7,16 @@ module.exports = {
         poppins: ["Poppins", "ui-sans-serif", "system-ui"],
       },
       colors: {
-        primary: "#1e78db",
-        bg: "#e8ecf2",
-        text: "#0d2c8b",
+        // Core theme tokens used in components
+        primary: "#012a3d",
+        bg: "#e1ecf3",
+        text: "#486071",
+        // Full palette
+        brand_dark: "#012a3d",
+        brand_mid1: "#486071",
+        brand_mid2: "#778d9b",
+        brand_mid3: "#9cb2c1",
+        brand_light: "#e1ecf3",
       },
     },
   },

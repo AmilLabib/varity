@@ -32,7 +32,7 @@ export default function Dashboard() {
         {/* Financial Summary */}
         <section className="lg:col-span-4 bg-white rounded-xl p-4 shadow">
           <div className="flex items-center gap-2 mb-2">
-            <BarChart2 className="w-5 h-5 text-blue-600" />
+            <BarChart2 className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">Financial Summary</h3>
           </div>
           <div className="space-y-2 text-sm text-gray-700">
@@ -64,7 +64,7 @@ export default function Dashboard() {
           <div className="mt-3">
             <Link
               to="/financial"
-              className="text-blue-600 text-sm hover:underline"
+              className="text-primary text-sm hover:underline"
             >
               Lihat detail
             </Link>
@@ -74,7 +74,7 @@ export default function Dashboard() {
         {/* Internal Management Summary */}
         <section className="lg:col-span-4 bg-white rounded-xl p-4 shadow">
           <div className="flex items-center gap-2 mb-2">
-            <Factory className="w-5 h-5 text-blue-600" />
+            <Factory className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">Internal Management</h3>
           </div>
           <div className="space-y-2 text-sm text-gray-700">
@@ -90,7 +90,7 @@ export default function Dashboard() {
           <div className="mt-3">
             <Link
               to="/internal-management"
-              className="text-blue-600 text-sm hover:underline"
+              className="text-primary text-sm hover:underline"
             >
               Kelola proses
             </Link>
@@ -100,7 +100,7 @@ export default function Dashboard() {
         {/* Data Driven Audit Summary */}
         <section className="lg:col-span-4 bg-white rounded-xl p-4 shadow">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-5 h-5 text-blue-600" />
+            <AlertTriangle className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">Data Driven Audit</h3>
           </div>
           <div className="space-y-2 text-sm text-gray-700">
@@ -116,7 +116,7 @@ export default function Dashboard() {
           <div className="mt-3">
             <Link
               to="/data-driven"
-              className="text-blue-600 text-sm hover:underline"
+              className="text-primary text-sm hover:underline"
             >
               Lihat audit
             </Link>
@@ -126,7 +126,7 @@ export default function Dashboard() {
         {/* UMKM Berkembang Summary */}
         <section className="lg:col-span-4 bg-white rounded-xl p-4 shadow">
           <div className="flex items-center gap-2 mb-2">
-            <Trophy className="w-5 h-5 text-blue-600" />
+            <Trophy className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">UMKM Berkembang</h3>
           </div>
           <div className="space-y-2 text-sm text-gray-700">
@@ -142,7 +142,7 @@ export default function Dashboard() {
           <div className="mt-3">
             <Link
               to="/umkm-berkembang"
-              className="text-blue-600 text-sm hover:underline"
+              className="text-primary text-sm hover:underline"
             >
               Lihat program
             </Link>
@@ -152,7 +152,7 @@ export default function Dashboard() {
         {/* Kelola Sampah Summary */}
         <section className="lg:col-span-4 bg-white rounded-xl p-4 shadow">
           <div className="flex items-center gap-2 mb-2">
-            <Leaf className="w-5 h-5 text-blue-600" />
+            <Leaf className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">Kelola Sampah</h3>
           </div>
           <div className="space-y-2 text-sm text-gray-700">
@@ -168,7 +168,7 @@ export default function Dashboard() {
           <div className="mt-3">
             <Link
               to="/kelola-sampah"
-              className="text-blue-600 text-sm hover:underline"
+              className="text-primary text-sm hover:underline"
             >
               Kelola
             </Link>
@@ -178,7 +178,7 @@ export default function Dashboard() {
         {/* Permodalan Summary */}
         <section className="lg:col-span-4 bg-white rounded-xl p-4 shadow">
           <div className="flex items-center gap-2 mb-2">
-            <ShieldCheck className="w-5 h-5 text-blue-600" />
+            <ShieldCheck className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">Permodalan</h3>
           </div>
           <div className="space-y-2 text-sm text-gray-700">
@@ -194,7 +194,7 @@ export default function Dashboard() {
           <div className="mt-3">
             <Link
               to="/permodalan"
-              className="text-blue-600 text-sm hover:underline"
+              className="text-primary text-sm hover:underline"
             >
               Lihat opsi
             </Link>

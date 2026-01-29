@@ -224,7 +224,7 @@ function evaluateAlerts(
     existingEntries?: Array<
       Pick<JournalEntry, "date" | "lines" | "description" | "id">
     >;
-  } = {}
+  } = {},
 ): Alert[] {
   const alerts: Alert[] = [];
   const {
@@ -260,7 +260,7 @@ function evaluateAlerts(
       severity: "error",
       code: "IMBALANCED",
       message: `Entry not balanced by ${formatRupiah(
-        Math.abs(totalDebit - totalCredit)
+        Math.abs(totalDebit - totalCredit),
       )}.`,
     });
   }
@@ -331,7 +331,7 @@ function evaluateAlerts(
         severity: "warning",
         code: "LARGE_VS_ASSETS",
         message: `Large entry (${(pctAssets * 100).toFixed(
-          1
+          1,
         )}% of total assets). Review authorization.`,
       });
     }
@@ -343,7 +343,7 @@ function evaluateAlerts(
         severity: "warning",
         code: "LARGE_VS_CASH",
         message: `Large entry (${(pctCash * 100).toFixed(
-          1
+          1,
         )}% of cash balance). Ensure cash availability/approval.`,
       });
     }
@@ -351,7 +351,7 @@ function evaluateAlerts(
 
   // Round-number pattern
   const largeRoundedCount = entry.lines.filter(
-    (l) => l.amount >= 1_000_000 && endsWithZeros(l.amount, 6)
+    (l) => l.amount >= 1_000_000 && endsWithZeros(l.amount, 6),
   ).length;
   if (largeRoundedCount >= Math.max(2, Math.ceil(entry.lines.length / 2))) {
     alerts.push({
@@ -418,7 +418,7 @@ export default function Dashboard() {
   >([{ id: `${Date.now()}-c0`, accountId: "", amount: "" }]);
   const [description, setDescription] = useState<string>("");
   const [date, setDate] = useState<string>(() =>
-    new Date().toISOString().slice(0, 10)
+    new Date().toISOString().slice(0, 10),
   );
   const [debitFilter, setDebitFilter] = useState("");
   const [creditFilter, setCreditFilter] = useState("");
@@ -603,7 +603,7 @@ export default function Dashboard() {
           currentAssetsTotal: bs.totalAssets,
           currentCash: bs.cash,
           existingEntries: entries.filter((x) => x.id !== e.id),
-        })
+        }),
       );
     }
     return map;
@@ -683,7 +683,7 @@ export default function Dashboard() {
       setCameraError(
         err?.name === "NotAllowedError"
           ? "Camera permission denied. Please allow camera access."
-          : err?.message || "Unable to access camera."
+          : err?.message || "Unable to access camera.",
       );
     }
   };
@@ -728,15 +728,15 @@ export default function Dashboard() {
     setEntries((prev) => prev.filter((e) => e.id !== id));
 
   const filteredDebit = CHART_OF_ACCOUNTS.filter((a) =>
-    (a.code + " " + a.name).toLowerCase().includes(debitFilter.toLowerCase())
+    (a.code + " " + a.name).toLowerCase().includes(debitFilter.toLowerCase()),
   );
   const filteredCredit = CHART_OF_ACCOUNTS.filter((a) =>
-    (a.code + " " + a.name).toLowerCase().includes(creditFilter.toLowerCase())
+    (a.code + " " + a.name).toLowerCase().includes(creditFilter.toLowerCase()),
   );
 
   return (
-    <div className="min-h-screen bg-bg">
-  <div className="max-w-[80rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+    <div className="min-h-screen bg-bg overflow-x-hidden">
+      <div className="max-w-[80rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         <header className="flex items-center gap-4">
           <h1 className="text-4xl font-extrabold text-primary mb-1">
             Financial Reporting
@@ -751,21 +751,21 @@ export default function Dashboard() {
 
         {/* Cards */}
         <main className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          <div className="bg-white rounded-2xl p-6 shadow-md">
+          <div className="bg-white rounded-2xl p-6 shadow-md min-w-0">
             <p className="text-lg">Total Revenue</p>
             <h3 className="text-4xl font-extrabold text-primary mt-4">
               {formatRpCompact(is.revenue)}
             </h3>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-md">
+          <div className="bg-white rounded-2xl p-6 shadow-md min-w-0">
             <p className="text-lg">Net Profit</p>
             <h3 className="text-4xl font-extrabold text-primary mt-4">
               {formatRpCompact(is.netIncome)}
             </h3>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-md">
+          <div className="bg-white rounded-2xl p-6 shadow-md min-w-0">
             <p className="text-lg">Net Change in Cash</p>
             <h3 className="text-4xl font-extrabold text-primary mt-4">
               {formatRpCompact(cfs.netChangeInCash)}
@@ -773,7 +773,7 @@ export default function Dashboard() {
           </div>
 
           {/* Asset Mix Pie Chart */}
-          <div className="bg-white rounded-2xl p-6 shadow-md md:col-span-1">
+          <div className="bg-white rounded-2xl p-6 shadow-md md:col-span-1 min-w-0">
             <div className="flex items-center justify-between">
               <p className="text-lg">Asset Mix</p>
               <span className="text-xs text-gray-500">
@@ -804,13 +804,13 @@ export default function Dashboard() {
                     paddingAngle={2}
                   >
                     {[
-                      "#3b82f6", // blue-500
-                      "#60a5fa", // blue-400
-                      "#93c5fd", // blue-300
-                      "#bfdbfe", // blue-200
-                      "#2563eb", // blue-600
-                      "#1d4ed8", // blue-700
-                    ].map((color, idx) => (
+                      "#486071", // brand_mid1
+                      "#778d9b", // brand_mid2
+                      "#9cb2c1", // brand_mid3
+                      "#e1ecf3", // brand_light
+                      "#012a3d", // brand_dark
+                      "#486071", // repeat mid1 if needed
+                    ].map((color: string, idx: number) => (
                       <Cell key={`cell-${idx}`} fill={color} />
                     ))}
                   </Pie>
@@ -831,9 +831,15 @@ export default function Dashboard() {
           </div>
 
           {/* Camera Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-md md:col-span-1">
+          <div className="bg-white rounded-2xl p-6 shadow-md md:col-span-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-lg">Camera</p>
+              <div className="flex flex-col">
+                <p className="text-lg">Camera</p>
+                <p className="text-xs text-gray-500">
+                  Scan struk belanja/penjualan untuk mencatat jurnal secara
+                  otomatis
+                </p>
+              </div>
               <span
                 className={`text-xs ${
                   isCameraOn ? "text-green-600" : "text-gray-500"
@@ -909,7 +915,7 @@ export default function Dashboard() {
           </div>
 
           {/* Journal Entry UI */}
-          <section className="bg-white rounded-2xl p-6 shadow-md mb-6 md:col-span-3">
+          <section className="bg-white rounded-2xl p-6 shadow-md mb-6 md:col-span-3 min-w-0">
             <h2 className="text-xl font-semibold mb-4">Journal Entry</h2>
             {/* Draft Alerts Panel */}
             {showDraftAlerts && draftAlerts.length > 0 && (
@@ -921,8 +927,8 @@ export default function Dashboard() {
                       a.severity === "error"
                         ? "border border-red-200 bg-red-50 text-red-700 px-3 py-2 rounded"
                         : a.severity === "warning"
-                        ? "border border-yellow-200 bg-yellow-50 text-yellow-800 px-3 py-2 rounded"
-                        : "border border-blue-200 bg-blue-50 text-blue-800 px-3 py-2 rounded"
+                          ? "border border-yellow-200 bg-yellow-50 text-yellow-800 px-3 py-2 rounded"
+                          : "border border-brand_mid3 bg-brand_light text-primary px-3 py-2 rounded"
                     }
                   >
                     {a.message}
@@ -959,8 +965,8 @@ export default function Dashboard() {
                             prev.map((r) =>
                               r.id === row.id
                                 ? { ...r, accountId: e.target.value }
-                                : r
-                            )
+                                : r,
+                            ),
                           )
                         }
                         className="min-w-0 flex-1 border rounded-md px-3 py-2"
@@ -981,8 +987,8 @@ export default function Dashboard() {
                             prev.map((r) =>
                               r.id === row.id
                                 ? { ...r, amount: e.target.value }
-                                : r
-                            )
+                                : r,
+                            ),
                           )
                         }
                         placeholder="Amount"
@@ -994,7 +1000,7 @@ export default function Dashboard() {
                           className="px-2 text-red-600 whitespace-nowrap"
                           onClick={() =>
                             setDebitLinesUI((prev) =>
-                              prev.filter((r) => r.id !== row.id)
+                              prev.filter((r) => r.id !== row.id),
                             )
                           }
                         >
@@ -1040,8 +1046,8 @@ export default function Dashboard() {
                             prev.map((r) =>
                               r.id === row.id
                                 ? { ...r, accountId: e.target.value }
-                                : r
-                            )
+                                : r,
+                            ),
                           )
                         }
                         className="min-w-0 flex-1 border rounded-md px-3 py-2"
@@ -1062,8 +1068,8 @@ export default function Dashboard() {
                             prev.map((r) =>
                               r.id === row.id
                                 ? { ...r, amount: e.target.value }
-                                : r
-                            )
+                                : r,
+                            ),
                           )
                         }
                         placeholder="Amount"
@@ -1075,7 +1081,7 @@ export default function Dashboard() {
                           className="px-2 text-red-600 whitespace-nowrap"
                           onClick={() =>
                             setCreditLinesUI((prev) =>
-                              prev.filter((r) => r.id !== row.id)
+                              prev.filter((r) => r.id !== row.id),
                             )
                           }
                         >
@@ -1118,8 +1124,8 @@ export default function Dashboard() {
                     {formatRupiah(
                       debitLinesUI.reduce(
                         (s, l) => s + (Number(l.amount) || 0),
-                        0
-                      )
+                        0,
+                      ),
                     )}
                   </span>
                   <span>
@@ -1127,8 +1133,8 @@ export default function Dashboard() {
                     {formatRupiah(
                       creditLinesUI.reduce(
                         (s, l) => s + (Number(l.amount) || 0),
-                        0
-                      )
+                        0,
+                      ),
                     )}
                   </span>
                   <span>
@@ -1137,13 +1143,13 @@ export default function Dashboard() {
                       Math.abs(
                         debitLinesUI.reduce(
                           (s, l) => s + (Number(l.amount) || 0),
-                          0
+                          0,
                         ) -
                           creditLinesUI.reduce(
                             (s, l) => s + (Number(l.amount) || 0),
-                            0
-                          )
-                      )
+                            0,
+                          ),
+                      ),
                     )}
                   </span>
                 </div>
@@ -1193,17 +1199,17 @@ export default function Dashboard() {
                       {entries.map((e) => {
                         const total = e.lines.reduce(
                           (s, l) => s + (l.side === "debit" ? l.amount : 0),
-                          0
+                          0,
                         );
                         const alerts = entryAlertsMap.get(e.id) || [];
                         const errCount = alerts.filter(
-                          (a) => a.severity === "error"
+                          (a) => a.severity === "error",
                         ).length;
                         const warnCount = alerts.filter(
-                          (a) => a.severity === "warning"
+                          (a) => a.severity === "warning",
                         ).length;
                         const infoCount = alerts.filter(
-                          (a) => a.severity === "info"
+                          (a) => a.severity === "info",
                         ).length;
                         return (
                           <tr key={e.id} className="border-t align-top">
@@ -1252,7 +1258,7 @@ export default function Dashboard() {
                                   </span>
                                 )}
                                 {infoCount > 0 && (
-                                  <span className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800 border border-blue-200">
+                                  <span className="px-2 py-0.5 text-xs rounded bg-brand_light text-primary border border-brand_mid3">
                                     {infoCount} info
                                   </span>
                                 )}
@@ -1279,7 +1285,7 @@ export default function Dashboard() {
         </main>
 
         {/* Tabbed financial statements */}
-        <section className="mt-8 bg-white rounded-xl p-3 sm:p-4 shadow">
+        <section className="mt-2 bg-white rounded-xl p-3 sm:p-4 shadow">
           <div className="flex flex-col">
             <div className="border-b">
               <TabNav active={activeTab} setActive={setActiveTab} />
