@@ -9,6 +9,7 @@ import DataDriven from "./pages/DataDriven";
 import UmkmBerkembang from "./pages/UmkmBerkembang";
 import KelolaSampah from "./pages/KelolaSampah";
 import Permodalan from "./pages/Permodalan";
+import Subscription from "./pages/Subscription";
 
 function LoginScreen() {
   const [passwordShown, setPasswordShown] = useState(false);
@@ -92,6 +93,7 @@ export default function App() {
         <Route path="/umkm-berkembang" element={<UmkmBerkembang />} />
         <Route path="/kelola-sampah" element={<KelolaSampah />} />
         <Route path="/permodalan" element={<Permodalan />} />
+        <Route path="/subscription" element={<Subscription />} />
       </Route>
     </Routes>
   );

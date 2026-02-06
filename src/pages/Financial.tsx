@@ -42,6 +42,15 @@ type Account = {
   target: StatementTarget;
 };
 
+type AccountDraft = {
+  id?: string;
+  code: string;
+  name: string;
+  type: AccountType;
+  targetKind: StatementTarget["kind"];
+  targetField: string;
+};
+
 const CHART_OF_ACCOUNTS: Account[] = [
   // Assets
   {
@@ -221,6 +230,7 @@ function evaluateAlerts(
   options: {
     currentAssetsTotal?: number;
     currentCash?: number;
+    getAccount?: (id: string | undefined) => Account | undefined;
     existingEntries?: Array<
       Pick<JournalEntry, "date" | "lines" | "description" | "id">
     >;
@@ -230,6 +240,7 @@ function evaluateAlerts(
   const {
     currentAssetsTotal = 0,
     currentCash = 0,
+    getAccount,
     existingEntries = [],
   } = options;
 
@@ -304,7 +315,7 @@ function evaluateAlerts(
 
   // Unusual side usage
   for (const l of entry.lines) {
-    const acc = findAccount(l.accountId);
+    const acc = getAccount ? getAccount(l.accountId) : undefined;
     if (!acc) continue;
     if (acc.type === "revenue" && l.side === "debit") {
       alerts.push({
@@ -381,10 +392,6 @@ function evaluateAlerts(
 }
 
 // Helpers
-function findAccount(id: string | undefined) {
-  return CHART_OF_ACCOUNTS.find((a) => a.id === id);
-}
-
 function isCashAccount(id?: string) {
   return id === "cash";
 }
@@ -409,6 +416,172 @@ function formatRpCompact(value: number) {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState(0);
+
+  // Editable chart of accounts (CRUD)
+  const [accounts, setAccounts] = useState<Account[]>(() => CHART_OF_ACCOUNTS);
+  const [accountDraft, setAccountDraft] = useState<AccountDraft>(() => ({
+    code: "",
+    name: "",
+    type: "asset",
+    targetKind: "bs",
+    targetField: "cash",
+  }));
+  const [accountsQuery, setAccountsQuery] = useState("");
+  const [accountsError, setAccountsError] = useState<string | null>(null);
+
+  const availableTargetFields = useMemo(() => {
+    if (accountDraft.targetKind === "bs") return Object.keys(balanceSheet2024);
+    if (accountDraft.targetKind === "is")
+      return Object.keys(incomeStatement2024);
+    return Object.keys(changesInEquity2024);
+  }, [accountDraft.targetKind]);
+
+  const findAccount = (id: string | undefined) =>
+    accounts.find((a) => a.id === id);
+
+  const filteredAccountsForCrud = useMemo(() => {
+    const q = accountsQuery.trim().toLowerCase();
+    if (!q) return accounts;
+    return accounts.filter((a) =>
+      `${a.code} ${a.name} ${a.type} ${a.target.kind} ${String(a.target.field)}`
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [accounts, accountsQuery]);
+
+  const makeAccountId = (code: string, name: string) => {
+    const base = `${code}-${name}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+      .slice(0, 40);
+    const suffix = Math.random().toString(36).slice(2, 6);
+    return `${base || "acc"}-${suffix}`;
+  };
+
+  const resetAccountDraft = () => {
+    setAccountDraft({
+      code: "",
+      name: "",
+      type: "asset",
+      targetKind: "bs",
+      targetField: "cash",
+    });
+    setAccountsError(null);
+  };
+
+  const startEditAccount = (acc: Account) => {
+    setAccountDraft({
+      id: acc.id,
+      code: acc.code,
+      name: acc.name,
+      type: acc.type,
+      targetKind: acc.target.kind,
+      targetField: String(acc.target.field),
+    });
+    setAccountsError(null);
+  };
+
+  const validateAccountDraft = () => {
+    const code = accountDraft.code.trim();
+    const name = accountDraft.name.trim();
+    if (!code || !name) return "Code and name are required.";
+    if (!/^[0-9A-Za-z_-]+$/.test(code))
+      return "Code must be alphanumeric (optionally - or _).";
+    if (!availableTargetFields.includes(accountDraft.targetField))
+      return "Invalid target field.";
+    const duplicateCode = accounts.some(
+      (a) =>
+        a.code.toLowerCase() === code.toLowerCase() && a.id !== accountDraft.id,
+    );
+    if (duplicateCode) return "Code already exists.";
+    return null;
+  };
+
+  const upsertAccount = () => {
+    const err = validateAccountDraft();
+    if (err) {
+      setAccountsError(err);
+      return;
+    }
+
+    const code = accountDraft.code.trim();
+    const name = accountDraft.name.trim();
+    const id = accountDraft.id || makeAccountId(code, name);
+
+    const target: StatementTarget =
+      accountDraft.targetKind === "bs"
+        ? {
+            kind: "bs",
+            field: accountDraft.targetField as keyof typeof balanceSheet2024,
+          }
+        : accountDraft.targetKind === "is"
+          ? {
+              kind: "is",
+              field:
+                accountDraft.targetField as keyof typeof incomeStatement2024,
+            }
+          : {
+              kind: "equity",
+              field:
+                accountDraft.targetField as keyof typeof changesInEquity2024,
+            };
+
+    const next: Account = {
+      id,
+      code,
+      name,
+      type: accountDraft.type,
+      target,
+    };
+
+    setAccounts((prev) => {
+      const exists = prev.some((a) => a.id === id);
+      const updated = exists
+        ? prev.map((a) => (a.id === id ? next : a))
+        : [...prev, next];
+      return updated.sort((a, b) =>
+        a.code > b.code ? 1 : a.code < b.code ? -1 : 0,
+      );
+    });
+
+    resetAccountDraft();
+  };
+
+  const deleteAccount = (id: string) => {
+    if (id === "cash") {
+      setAccountsError("The Cash account can't be deleted.");
+      return;
+    }
+    const used = entries.some((e) => e.lines.some((l) => l.accountId === id));
+    if (used) {
+      setAccountsError(
+        "This account is used in existing journal entries. Remove those entries first.",
+      );
+      return;
+    }
+    setAccounts((prev) => prev.filter((a) => a.id !== id));
+    setDebitLinesUI((prev) =>
+      prev.map((l) => (l.accountId === id ? { ...l, accountId: "" } : l)),
+    );
+    setCreditLinesUI((prev) =>
+      prev.map((l) => (l.accountId === id ? { ...l, accountId: "" } : l)),
+    );
+    if (accountDraft.id === id) resetAccountDraft();
+    setAccountsError(null);
+  };
+
+  const resetAccountsToDefault = () => {
+    if (entries.length > 0) {
+      setAccountsError(
+        "Reset disabled while journal entries exist (to avoid breaking mappings).",
+      );
+      return;
+    }
+    setAccounts(CHART_OF_ACCOUNTS);
+    resetAccountDraft();
+    setAccountsError(null);
+  };
   // Journal UI state
   const [debitLinesUI, setDebitLinesUI] = useState<
     Array<{ id: string; accountId: string; amount: string }>
@@ -559,7 +732,7 @@ export default function Dashboard() {
       cfs.netChangeInCash - cfs.cashFromInvesting - cfs.cashFromFinancing;
 
     return { bs, is, cfs, equity };
-  }, [entries]);
+  }, [entries, accounts]);
 
   // Build draft journal entry from UI for alerting
   const draftEntry = useMemo(() => {
@@ -587,9 +760,10 @@ export default function Dashboard() {
     return evaluateAlerts(draftEntry, {
       currentAssetsTotal: bs.totalAssets,
       currentCash: bs.cash,
+      getAccount: findAccount,
       existingEntries: entries,
     });
-  }, [draftEntry, bs.totalAssets, bs.cash, entries]);
+  }, [draftEntry, bs.totalAssets, bs.cash, entries, findAccount]);
 
   const draftHasErrors = draftAlerts.some((a) => a.severity === "error");
 
@@ -602,12 +776,13 @@ export default function Dashboard() {
         evaluateAlerts(e, {
           currentAssetsTotal: bs.totalAssets,
           currentCash: bs.cash,
+          getAccount: findAccount,
           existingEntries: entries.filter((x) => x.id !== e.id),
         }),
       );
     }
     return map;
-  }, [entries, bs.totalAssets, bs.cash]);
+  }, [entries, bs.totalAssets, bs.cash, findAccount]);
 
   // Post button click handler: show errors on click if any, else post
   const handlePostClick = () => {
@@ -727,10 +902,10 @@ export default function Dashboard() {
   const removeEntry = (id: string) =>
     setEntries((prev) => prev.filter((e) => e.id !== id));
 
-  const filteredDebit = CHART_OF_ACCOUNTS.filter((a) =>
+  const filteredDebit = accounts.filter((a) =>
     (a.code + " " + a.name).toLowerCase().includes(debitFilter.toLowerCase()),
   );
-  const filteredCredit = CHART_OF_ACCOUNTS.filter((a) =>
+  const filteredCredit = accounts.filter((a) =>
     (a.code + " " + a.name).toLowerCase().includes(creditFilter.toLowerCase()),
   );
 
@@ -1281,6 +1456,226 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+
+            {/* Accounts CRUD */}
+            <div className="mt-8 border-t pt-6">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-semibold">Accounts (CRUD)</h3>
+                  <p className="text-xs text-gray-500">
+                    Manage debit/credit selectable accounts. Updates are
+                    reflected in the dropdowns above.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={resetAccountsToDefault}
+                  className="text-sm border px-3 py-1.5 rounded"
+                >
+                  Reset to default
+                </button>
+              </div>
+
+              {accountsError && (
+                <div className="mt-3 border border-red-200 bg-red-50 text-red-700 px-3 py-2 rounded text-sm">
+                  {accountsError}
+                </div>
+              )}
+
+              <div className="mt-4 grid lg:grid-cols-3 gap-4">
+                {/* Create / Edit */}
+                <div className="lg:col-span-1 border rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium">
+                      {accountDraft.id ? "Edit account" : "Add new account"}
+                    </p>
+                    {accountDraft.id && (
+                      <button
+                        type="button"
+                        onClick={resetAccountDraft}
+                        className="text-sm text-gray-600 hover:underline"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <label className="text-sm text-gray-600">Code</label>
+                      <input
+                        value={accountDraft.code}
+                        onChange={(e) =>
+                          setAccountDraft((p) => ({
+                            ...p,
+                            code: e.target.value,
+                          }))
+                        }
+                        placeholder="e.g. 6100"
+                        className="mt-1 w-full border rounded-md px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Name</label>
+                      <input
+                        value={accountDraft.name}
+                        onChange={(e) =>
+                          setAccountDraft((p) => ({
+                            ...p,
+                            name: e.target.value,
+                          }))
+                        }
+                        placeholder="e.g. Marketing Expense"
+                        className="mt-1 w-full border rounded-md px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Type</label>
+                      <select
+                        value={accountDraft.type}
+                        onChange={(e) =>
+                          setAccountDraft((p) => ({
+                            ...p,
+                            type: e.target.value as AccountType,
+                          }))
+                        }
+                        className="mt-1 w-full border rounded-md px-3 py-2"
+                      >
+                        <option value="asset">asset</option>
+                        <option value="liability">liability</option>
+                        <option value="equity">equity</option>
+                        <option value="revenue">revenue</option>
+                        <option value="expense">expense</option>
+                        <option value="distribution">distribution</option>
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm text-gray-600">
+                          Statement
+                        </label>
+                        <select
+                          value={accountDraft.targetKind}
+                          onChange={(e) => {
+                            const kind = e.target
+                              .value as AccountDraft["targetKind"];
+                            const defaults =
+                              kind === "bs"
+                                ? Object.keys(balanceSheet2024)
+                                : kind === "is"
+                                  ? Object.keys(incomeStatement2024)
+                                  : Object.keys(changesInEquity2024);
+                            setAccountDraft((p) => ({
+                              ...p,
+                              targetKind: kind,
+                              targetField: defaults[0] || "cash",
+                            }));
+                          }}
+                          className="mt-1 w-full border rounded-md px-3 py-2"
+                        >
+                          <option value="bs">Balance Sheet</option>
+                          <option value="is">Income Statement</option>
+                          <option value="equity">Equity</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-600">Field</label>
+                        <select
+                          value={accountDraft.targetField}
+                          onChange={(e) =>
+                            setAccountDraft((p) => ({
+                              ...p,
+                              targetField: e.target.value,
+                            }))
+                          }
+                          className="mt-1 w-full border rounded-md px-3 py-2"
+                        >
+                          {availableTargetFields.map((f) => (
+                            <option key={f} value={f}>
+                              {f}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={upsertAccount}
+                      className="w-full bg-primary text-white px-4 py-2 rounded-md"
+                    >
+                      {accountDraft.id ? "Save changes" : "Add account"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* List */}
+                <div className="lg:col-span-2 border rounded-xl p-4">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <p className="font-medium">Accounts list</p>
+                    <input
+                      value={accountsQuery}
+                      onChange={(e) => setAccountsQuery(e.target.value)}
+                      placeholder="Search code/name/type..."
+                      className="border rounded-md px-3 py-2 text-sm w-full sm:w-72"
+                    />
+                  </div>
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-gray-600">
+                          <th className="py-2 pr-4">Code</th>
+                          <th className="py-2 pr-4">Name</th>
+                          <th className="py-2 pr-4">Type</th>
+                          <th className="py-2 pr-4">Target</th>
+                          <th className="py-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredAccountsForCrud.map((a) => (
+                          <tr key={a.id} className="border-t">
+                            <td className="py-2 pr-4 whitespace-nowrap">
+                              {a.code}
+                            </td>
+                            <td className="py-2 pr-4">{a.name}</td>
+                            <td className="py-2 pr-4 whitespace-nowrap">
+                              {a.type}
+                            </td>
+                            <td className="py-2 pr-4 whitespace-nowrap text-gray-600">
+                              {a.target.kind}:{String(a.target.field)}
+                            </td>
+                            <td className="py-2 whitespace-nowrap">
+                              <div className="flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => startEditAccount(a)}
+                                  className="text-primary hover:underline"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteAccount(a.id)}
+                                  className="text-red-600 hover:underline"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {filteredAccountsForCrud.length === 0 && (
+                      <p className="text-sm text-gray-500 mt-3">
+                        No accounts found.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
         </main>
 
